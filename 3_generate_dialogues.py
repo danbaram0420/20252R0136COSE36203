@@ -11,28 +11,22 @@ import pickle
 from dataset import load_processed_data
 from generate_text import (
     generate_dialogues_vllm,
-    generate_dialogues_rule_based
+    generate_dialogues_rule_based,
+    features_to_state
 )
 
 # Configuration
 CONFIG = {
-    'model_name': 'mistralai/Mistral-7B-Instruct-v0.2',  # 구버전 transformers 호환
-    # Alternative options (all compatible with older transformers):
-    # 'meta-llama/Llama-2-7b-chat-hf'  # 안정적 (gated)
-    # 'HuggingFaceH4/zephyr-7b-beta'  # 좋은 품질
-    # 'TinyLlama/TinyLlama-1.1B-Chat-v1.0'  # 가벼움
-    # Newer models (require transformers>=4.37):
-    # 'Qwen/Qwen2.5-7B-Instruct'  
-    # 'meta-llama/Llama-3.1-8B-Instruct'
+    'model_name': 'mistralai/Mistral-7B-Instruct-v0.2',
     'max_tokens': 50,
     'temperature': 0.7,
-    'batch_size': 8,  # Reduced for stability, increase to 16-32 if GPU has enough memory
+    'batch_size': 8,
     'output_file': 'data/text/dialogues.jsonl',
-    'use_vllm': False,  # vLLM has dependency issues, use transformers instead
-    'use_transformers': True,  # Use HuggingFace transformers (slower but stable)
+    'use_vllm': False,
+    'use_transformers': True,
     'use_cache': True,
-    'n_samples': None,  # None = use all, or specify number for testing
-    'hf_token': None  # Set to your HF token or use env var HF_TOKEN
+    'n_samples': None,
+    'hf_token': None
 }
 
 def main():
@@ -52,22 +46,9 @@ def main():
     
     print(f"  Total samples: {len(labels)}")
     
-    # Reconstruct states for dialogue generation
-    print("\n2. Reconstructing game states...")
-    # Note: For dialogue generation, we create simplified state representations
-    # The actual features are already extracted, but we need state dicts for prompts
-    states = []
-    for i in range(len(labels)):
-        # Extract key info from features (simplified)
-        state = {
-            'street': 'preflop',  # Simplified - could be extracted from features
-            'pot': int(features[i, -3] * 10000),  # Denormalize
-            'stack': int(features[i, -2] * 10000),
-            'bet_to_call': int(features[i, -1] * 10000),
-            'hole_cards': []  # Don't need actual cards for dialogue
-        }
-        states.append(state)
-    
+    # Reconstruct game states from features
+    print("\n2. Reconstructing game states from features...")
+    states = [features_to_state(f) for f in features]
     print(f"  Created {len(states)} state representations")
     
     # Generate dialogues
@@ -134,11 +115,11 @@ def main():
         'model_name': CONFIG['model_name'],
         'max_tokens': CONFIG['max_tokens'],
         'temperature': CONFIG['temperature'],
-        'method': 'vllm' if CONFIG['use_vllm'] else 'rule_based'
+        'method': 'vllm' if CONFIG['use_vllm'] else ('transformers' if CONFIG['use_transformers'] else 'rule_based')
     }
     
     # Determine actual output file used
-    if CONFIG['use_vllm']:
+    if CONFIG['use_vllm'] or CONFIG['use_transformers']:
         actual_output_file = CONFIG['output_file']
     else:
         actual_output_file = CONFIG['output_file'].replace('.jsonl', '_rule_based.jsonl')
