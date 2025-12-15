@@ -96,7 +96,6 @@ poker_project/
 ├── 6_train_rl_multimodal.py      # Step 6: RL multimodal (PPO)
 ├── 7_evaluate_vs_rule_based.py   # Step 7: Evaluate all models
 ├── run_all.ipynb         # Jupyter notebook pipeline
-├── run_all.py            # Python script pipeline
 └── requirements.txt
 ```
 
@@ -110,15 +109,7 @@ jupyter notebook run_all.ipynb
 
 Interactive notebook with step-by-step execution and visualization.
 
-### Option 2: Run Complete Pipeline
-
-```bash
-python run_all.py
-```
-
-Executes all 7 steps sequentially (takes several hours).
-
-### Option 3: Run Individual Steps
+### Option 2: Run Individual Steps
 
 #### Step 1: Preprocess Data
 
