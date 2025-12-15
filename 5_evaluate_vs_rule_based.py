@@ -233,12 +233,18 @@ class BaselineModelAgent:
             self.pca = None
             input_dim = 377
         
-        self.model = PokerMLP(input_dim=input_dim)
+        # Get model architecture from checkpoint if available
+        model_config = checkpoint.get('config', {})
+        hidden_dims = model_config.get('hidden_dims', [2048, 2048])  # Default from training script
+        dropout = model_config.get('dropout', 0.2)
+        
+        self.model = PokerMLP(input_dim=input_dim, hidden_dims=hidden_dims, dropout=dropout)
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.model.to(self.device)
         self.model.eval()
         
         print(f"Loaded baseline model from {model_path}")
+        print(f"  Architecture: input={input_dim}, hidden={hidden_dims}")
         print(f"  Using PCA: {self.use_pca}")
     
     def state_to_features(self, game_state):
@@ -325,7 +331,21 @@ class MultimodalModelAgent:
         # Load model
         checkpoint = torch.load(model_path, map_location=self.device)
         
-        self.model = MultimodalPokerModel()
+        # Get model architecture from checkpoint if available
+        model_config = checkpoint.get('config', {})
+        game_input_dim = model_config.get('game_input_dim', 377)
+        text_input_dim = model_config.get('text_input_dim', 256)
+        game_hidden_dims = model_config.get('game_hidden_dims', [512, 256])
+        fusion_hidden_dims = model_config.get('fusion_hidden_dims', [384, 192])
+        dropout = model_config.get('dropout', 0.2)
+        
+        self.model = MultimodalPokerModel(
+            game_input_dim=game_input_dim,
+            text_input_dim=text_input_dim,
+            game_hidden_dims=game_hidden_dims,
+            fusion_hidden_dims=fusion_hidden_dims,
+            dropout=dropout
+        )
         self.model.load_state_dict(checkpoint['model_state_dict'])
         self.model.to(self.device)
         self.model.eval()
@@ -339,6 +359,7 @@ class MultimodalModelAgent:
         self.use_llm = text_gen_model is not None
         
         print(f"Loaded multimodal model from {model_path}")
+        print(f"  Architecture: game_input={game_input_dim}, text_input={text_input_dim}")
         print(f"  Real-time dialogue generation: {self.use_llm}")
     
     def state_to_features(self, game_state):
