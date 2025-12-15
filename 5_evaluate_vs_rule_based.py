@@ -222,7 +222,7 @@ class BaselineModelAgent:
         self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
         
         # Load checkpoint
-        checkpoint = torch.load(model_path, map_location=self.device)
+        checkpoint = torch.load(model_path, map_location=self.device, weights_only=False)
         state_dict = checkpoint['model_state_dict']
         
         # Infer model architecture from state_dict
@@ -338,7 +338,7 @@ class MultimodalModelAgent:
         self.device = torch.device(device if torch.cuda.is_available() else 'cpu')
         
         # Load model
-        checkpoint = torch.load(model_path, map_location=self.device)
+        checkpoint = torch.load(model_path, map_location=self.device, weights_only=False)
         state_dict = checkpoint['model_state_dict']
         
         # Infer architecture from checkpoint
