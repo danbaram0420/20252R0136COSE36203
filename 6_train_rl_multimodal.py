@@ -24,7 +24,7 @@ from generate_text import load_dialogues
 # Configuration
 CONFIG = {
     'batch_size': 256,
-    'learning_rate': 0.0003,
+    'learning_rate': 0.0001,
     'n_episodes': 1000,
     'max_steps_per_episode': 50,
     'ppo_epochs': 4,
@@ -33,7 +33,7 @@ CONFIG = {
     'gae_lambda': 0.95,
     'value_loss_coef': 0.5,
     'entropy_coef': 0.01,
-    'max_grad_norm': 0.5,
+    'max_grad_norm': 1.0,
     'hidden_dim': 128,
     'fusion_dim': 256,
     'dropout': 0.1,
@@ -174,15 +174,26 @@ class MultimodalPPOTrainer:
     
     def update(self, game_states, text_embeddings, actions, old_log_probs, returns, advantages):
         """PPO update step for multimodal model"""
-        # Normalize advantages
-        advantages = (advantages - advantages.mean()) / (advantages.std() + 1e-8)
+        # Normalize advantages with safety checks
+        adv_mean = advantages.mean()
+        adv_std = advantages.std()
+        if adv_std > 1e-6:
+            advantages = (advantages - adv_mean) / (adv_std + 1e-8)
+        else:
+            advantages = advantages - adv_mean
         
         for _ in range(self.config['ppo_epochs']):
             # Evaluate actions with current policy
             log_probs, values, entropy = self.model.evaluate_actions(game_states, text_embeddings, actions)
             
+            # Check for NaN
+            if torch.isnan(log_probs).any() or torch.isnan(values).any():
+                print("Warning: NaN detected in forward pass, skipping update")
+                return 0.0, 0.0, 0.0
+            
             # PPO clipped objective
             ratio = torch.exp(log_probs - old_log_probs)
+            ratio = torch.clamp(ratio, 0.1, 10.0)  # Prevent extreme ratios
             surr1 = ratio * advantages
             surr2 = torch.clamp(ratio, 1 - self.config['clip_epsilon'], 1 + self.config['clip_epsilon']) * advantages
             policy_loss = -torch.min(surr1, surr2).mean()
@@ -195,6 +206,11 @@ class MultimodalPPOTrainer:
             
             # Total loss
             loss = policy_loss + self.config['value_loss_coef'] * value_loss + self.config['entropy_coef'] * entropy_loss
+            
+            # Check loss for NaN
+            if torch.isnan(loss):
+                print("Warning: NaN in loss, skipping update")
+                return 0.0, 0.0, 0.0
             
             # Optimize
             self.optimizer.zero_grad()
