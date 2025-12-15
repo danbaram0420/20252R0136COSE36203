@@ -228,18 +228,33 @@ class BaselineModelAgent:
         self.use_pca = 'pca' in checkpoint
         if self.use_pca:
             self.pca = checkpoint['pca']
-            input_dim = 256  # PCA reduced dimension
         else:
             self.pca = None
-            input_dim = 377
         
-        # Get model architecture from checkpoint if available
+        # Infer model architecture from checkpoint weights
+        state_dict = checkpoint['model_state_dict']
+        
+        # Get input dimension from first layer
+        first_weight = state_dict['network.0.weight']
+        input_dim = first_weight.shape[1]
+        
+        # Get hidden dimensions from intermediate layers
+        hidden_dims = []
+        layer_idx = 0
+        while f'network.{layer_idx}.weight' in state_dict:
+            weight = state_dict[f'network.{layer_idx}.weight']
+            hidden_dims.append(weight.shape[0])
+            layer_idx += 3  # Skip ReLU and Dropout
+        
+        # Remove output layer dimension
+        hidden_dims = hidden_dims[:-1]
+        
+        # Get dropout (use default if not in config)
         model_config = checkpoint.get('config', {})
-        hidden_dims = model_config.get('hidden_dims', [2048, 2048])  # Default from training script
         dropout = model_config.get('dropout', 0.2)
         
         self.model = PokerMLP(input_dim=input_dim, hidden_dims=hidden_dims, dropout=dropout)
-        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.model.load_state_dict(state_dict)
         self.model.to(self.device)
         self.model.eval()
         
@@ -330,14 +345,41 @@ class MultimodalModelAgent:
         
         # Load model
         checkpoint = torch.load(model_path, map_location=self.device)
+        state_dict = checkpoint['model_state_dict']
         
-        # Get model architecture from checkpoint if available
+        # Infer architecture from checkpoint
         model_config = checkpoint.get('config', {})
-        game_input_dim = model_config.get('game_input_dim', 377)
-        text_input_dim = model_config.get('text_input_dim', 256)
-        game_hidden_dims = model_config.get('game_hidden_dims', [512, 256])
-        fusion_hidden_dims = model_config.get('fusion_hidden_dims', [384, 192])
-        dropout = model_config.get('dropout', 0.2)
+        
+        # Try to get from config first, otherwise infer from weights
+        if 'game_input_dim' in model_config:
+            game_input_dim = model_config['game_input_dim']
+            text_input_dim = model_config['text_input_dim']
+            game_hidden_dims = model_config['game_hidden_dims']
+            fusion_hidden_dims = model_config['fusion_hidden_dims']
+            dropout = model_config.get('dropout', 0.2)
+        else:
+            # Infer from weights
+            game_input_dim = state_dict['game_encoder.0.weight'].shape[1]
+            text_input_dim = 256  # Default for DistilBERT
+            
+            # Get game encoder hidden dims
+            game_hidden_dims = []
+            layer_idx = 0
+            while f'game_encoder.{layer_idx}.weight' in state_dict:
+                weight = state_dict[f'game_encoder.{layer_idx}.weight']
+                game_hidden_dims.append(weight.shape[0])
+                layer_idx += 3
+            
+            # Get fusion hidden dims
+            fusion_hidden_dims = []
+            layer_idx = 0
+            while f'fusion_network.{layer_idx}.weight' in state_dict:
+                weight = state_dict[f'fusion_network.{layer_idx}.weight']
+                fusion_hidden_dims.append(weight.shape[0])
+                layer_idx += 3
+            fusion_hidden_dims = fusion_hidden_dims[:-1]  # Remove output layer
+            
+            dropout = 0.2
         
         self.model = MultimodalPokerModel(
             game_input_dim=game_input_dim,
@@ -346,7 +388,7 @@ class MultimodalModelAgent:
             fusion_hidden_dims=fusion_hidden_dims,
             dropout=dropout
         )
-        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.model.load_state_dict(state_dict)
         self.model.to(self.device)
         self.model.eval()
         
@@ -360,6 +402,7 @@ class MultimodalModelAgent:
         
         print(f"Loaded multimodal model from {model_path}")
         print(f"  Architecture: game_input={game_input_dim}, text_input={text_input_dim}")
+        print(f"  Game encoder: {game_hidden_dims}, Fusion: {fusion_hidden_dims}")
         print(f"  Real-time dialogue generation: {self.use_llm}")
     
     def state_to_features(self, game_state):
