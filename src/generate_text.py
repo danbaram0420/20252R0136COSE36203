@@ -80,11 +80,7 @@ def index_to_card(idx):
 # Prompt Templates
 # ============================================================================
 
-SYSTEM_PROMPT = """You are a poker player. Say what you would say out loud during the game. Keep it very short (under 10 words). Examples:
-"I'll call"
-"Let's see the flop"
-"Too rich for me"
-"I'm all in"
+SYSTEM_PROMPT = """You are a poker player. Say what you would say out loud during the game. Keep it very short (under 10 words).
 Only output the dialogue, nothing else."""
 
 def create_dialogue_prompt(state):
