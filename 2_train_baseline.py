@@ -23,8 +23,8 @@ from evaluate import (
 
 # Configuration
 CONFIG = {
-    'batch_size': 1024,
-    'learning_rate': 0.0001,
+    'batch_size': 256,
+    'learning_rate': 0.0002,
     'n_epochs': 15,
     'hidden_dims': [1024, 1024, 1024],
     'dropout': 0.2,
