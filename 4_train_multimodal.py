@@ -28,14 +28,14 @@ from generate_text import load_dialogues
 CONFIG = {
     'batch_size': 256,
     'learning_rate': 0.0002,
-    'n_epochs': 15,
-    'game_hidden_dims': [2048, 2048],
+    'n_epochs': 30,
+    'game_hidden_dims': [2048, 1024],
     'fusion_hidden_dims': [384, 192],
     'dropout': 0.2,
     'test_size': 0.2,
     'random_seed': 42,
     'text_model': 'distilbert-base-uncased',
-    'text_dim': 512,
+    'text_dim': 256,
     'checkpoint_dir': 'checkpoints',
     'output_dir': 'outputs',
     'dialogue_file': 'data/text/dialogues.jsonl'
