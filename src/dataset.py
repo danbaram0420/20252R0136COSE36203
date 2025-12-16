@@ -311,11 +311,21 @@ def categorize_action(action_type, action_amount, bet_to_call, pot, stack):
 # ============================================================================
 
 def extract_decision_points(hand, target_player='p1'):
-    """Extract all decision points for a target player"""
+    """Extract all decision points for a target player
+    if target_player = None or "all": all players.
+    """
     actions = hand.get('actions', [])
     n_players = len(hand.get('players', []))
     starting_stacks = hand.get('starting_stacks', [])
     blinds = hand.get('blinds', [])
+
+    # --- NEW: target set ---
+    if target_player is None or target_player == 'all':
+        target_set = None
+    elif isinstance(target_player, (list, tuple, set)):
+        target_set = set(target_player)
+    else:
+        target_set = {target_player}
     
     current_stacks = starting_stacks.copy()
     current_pot = sum(blinds)
@@ -373,11 +383,11 @@ def extract_decision_points(hand, target_player='p1'):
             
             if player_idx < 0 or player_idx >= n_players:
                 continue
-            
+
             # Only record decision points for target player
-            if player == target_player and player in hole_cards:
+            if (player in hole_cards) and (target_set is None or player in target_set):
                 bet_to_call = max(current_bets) - current_bets[player_idx]
-                
+
                 # Create state
                 state = {
                     'street': street,
@@ -388,15 +398,15 @@ def extract_decision_points(hand, target_player='p1'):
                     'bet_to_call': bet_to_call,
                     'position': player_idx,
                 }
-                
+
                 label = categorize_action(
-                    action_type, 
-                    action_amount, 
-                    bet_to_call, 
-                    current_pot, 
+                    action_type,
+                    action_amount,
+                    bet_to_call,
+                    current_pot,
                     current_stacks[player_idx]
                 )
-                
+
                 if label >= 0:
                     decision_points.append((state, label))
             
