@@ -19,7 +19,7 @@ CONFIG = {
     'use_cache': True,
     'cache_path': 'data/raw',
     'output_path': 'data/processed',
-    'target_player': 'p1'
+    'target_player': 'all'
 }
 
 def main():
