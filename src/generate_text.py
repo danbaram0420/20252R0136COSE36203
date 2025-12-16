@@ -502,10 +502,10 @@ def generate_dialogues_rule_based(action_labels, output_file='data/text/dialogue
 def load_dialogues(input_file='data/text/dialogues.jsonl'):
     """
     Load generated dialogues from file
-    
+
     Args:
         input_file: Path to dialogue file
-        
+
     Returns:
         dialogues: List of dialogue strings
         actions: List of action labels
@@ -519,15 +519,39 @@ def load_dialogues(input_file='data/text/dialogues.jsonl'):
             input_file = fallback_file
         else:
             raise FileNotFoundError(f"Dialogue file not found: {input_file}")
-    
+
     dialogues = []
     actions = []
-    
+
     with open(input_file, 'r') as f:
         for line in f:
             data = json.loads(line)
             dialogues.append(data['dialogue'])
             actions.append(data['action'])
-    
+
     print(f"✓ Loaded {len(dialogues)} dialogues from {input_file}")
     return dialogues, actions
+
+
+def generate_dialogue_template(game_state, action_idx):
+    """
+    Generate a dialogue for a given game state and action (for real-time play)
+
+    Args:
+        game_state: Dict with game state information
+        action_idx: Action index (0-5)
+
+    Returns:
+        dialogue: String dialogue
+    """
+    rng = np.random.RandomState()
+
+    # Get template for action
+    if action_idx in RULE_BASED_TEMPLATES:
+        templates = RULE_BASED_TEMPLATES[action_idx]
+        dialogue = rng.choice(templates)
+    else:
+        # Default fallback
+        dialogue = "Let's play."
+
+    return dialogue

@@ -95,6 +95,7 @@ poker_project/
 ├── 5_train_rl_baseline.py        # Step 5: RL baseline (PPO)
 ├── 6_train_rl_multimodal.py      # Step 6: RL multimodal (PPO)
 ├── 7_evaluate_vs_rule_based.py   # Step 7: Evaluate all models
+├── 8_play_against_ai.py          # Step 8: Play against trained AI
 ├── run_all.ipynb         # Jupyter notebook pipeline
 └── requirements.txt
 ```
@@ -166,6 +167,83 @@ python 7_evaluate_vs_rule_based.py --model_type rl_multimodal --model_path check
 ```
 
 Evaluates models against rule-based agent.
+
+#### Step 8: Play Against Trained AI 🎮
+
+```bash
+python 8_play_against_ai.py
+```
+
+**Interactive poker game!** Play heads-up Texas Hold'em against any of the 4 trained AI models.
+
+Features:
+- **Choose your opponent**: Select from all 4 trained models (RL Multimodal, RL Baseline, Supervised Multimodal, Supervised Baseline)
+- Full poker rules implementation with proper hand evaluation
+- Real-time AI decisions with optional dialogue (for multimodal models)
+- Interactive CLI interface with clear game state display
+- Customizable starting stack and number of hands
+- Detailed hand results and running score
+
+Example usage:
+```
+============================================================
+STEP 8: PLAY POKER AGAINST TRAINED AI
+============================================================
+
+Checking for trained models...
+  ✓ RL Multimodal (Best) - Available
+  ✓ RL Baseline - Available
+  ✓ Supervised Multimodal - Available
+  ✓ Supervised Baseline - Available
+
+============================================================
+SELECT MODEL TO PLAY AGAINST
+============================================================
+
+1. RL Multimodal (Best)
+   PPO-trained with game state + dialogue (76,669 BB profit)
+
+2. RL Baseline
+   PPO-trained with game state only (23,827 BB profit)
+
+3. Supervised Multimodal
+   Supervised learning with game state + dialogue (33,975 BB profit)
+
+4. Supervised Baseline
+   Supervised learning with game state only (-1,858 BB profit)
+
+Select model (1-4): 1
+
+Loading RL Multimodal (Best)...
+✓ RL Multimodal (Best) loaded successfully!
+
+============================================================
+WELCOME TO POKER AI CHALLENGE!
+============================================================
+
+You're playing heads-up No-Limit Texas Hold'em
+Starting stack: 100 BB each
+Blinds: 1/2 BB
+
+🧑 YOU:
+  Hole: K♠ Q♥
+  Stack: 98 BB
+  Bet: 2 BB
+
+🃏 BOARD: (no cards yet)
+
+🤖 AI:
+  Hole: 🂠 🂠 (hidden)
+  Stack: 99 BB
+  Bet: 1 BB
+
+💰 POT: 3 BB
+============================================================
+
+🎯 Your turn!
+Valid actions: fold, call, raise, all_in
+Choose your action:
+```
 
 ## Configuration
 
