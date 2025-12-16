@@ -283,6 +283,7 @@ class PokerGame:
         self.to_act = None
         self.hand_over = False
         self.folded = None
+        self.last_action = None  # Track last action to detect consecutive checks
 
     def start_hand(self):
         """Start a new hand"""
@@ -297,6 +298,7 @@ class PokerGame:
         self.hand_over = False
         self.folded = None
         self.street = 'preflop'
+        self.last_action = None
 
         # Rotate button
         self.button = 'ai' if self.button == 'player' else 'player'
@@ -392,9 +394,13 @@ class PokerGame:
                 return self._get_state()
 
             elif action == 'check':
-                # Move to next street or end hand
-                if self.player_bet == self.ai_bet:
+                # If both players check consecutively, move to next street
+                if self.player_bet == self.ai_bet and self.last_action == 'check':
                     self._next_street()
+                else:
+                    # Switch to other player's turn
+                    self.to_act = 'ai'
+                    self.last_action = 'check'
                 return self._get_state()
 
             elif action == 'call':
@@ -402,6 +408,7 @@ class PokerGame:
                 self.player_stack -= amount
                 self.player_bet += amount
                 self.pot += amount
+                self.last_action = 'call'
 
                 # Move to next street
                 if self.player_bet == self.ai_bet:
@@ -419,6 +426,7 @@ class PokerGame:
                 self.player_bet += amount
                 self.pot += amount
                 self.to_act = 'ai'
+                self.last_action = 'raise'
                 return self._get_state()
 
             elif action == 'all_in':
@@ -427,6 +435,7 @@ class PokerGame:
                 self.player_bet += amount
                 self.pot += amount
                 self.to_act = 'ai'
+                self.last_action = 'all_in'
                 return self._get_state()
 
         else:  # AI's turn
@@ -437,8 +446,13 @@ class PokerGame:
                 return self._get_state()
 
             elif action == 'check':
-                if self.player_bet == self.ai_bet:
+                # If both players check consecutively, move to next street
+                if self.player_bet == self.ai_bet and self.last_action == 'check':
                     self._next_street()
+                else:
+                    # Switch to other player's turn
+                    self.to_act = 'player'
+                    self.last_action = 'check'
                 return self._get_state()
 
             elif action == 'call':
@@ -446,6 +460,7 @@ class PokerGame:
                 self.ai_stack -= amount
                 self.ai_bet += amount
                 self.pot += amount
+                self.last_action = 'call'
 
                 if self.player_bet == self.ai_bet:
                     self._next_street()
@@ -462,6 +477,7 @@ class PokerGame:
                 self.ai_bet += amount
                 self.pot += amount
                 self.to_act = 'player'
+                self.last_action = 'raise'
                 return self._get_state()
 
             elif action == 'all_in':
@@ -470,6 +486,7 @@ class PokerGame:
                 self.ai_bet += amount
                 self.pot += amount
                 self.to_act = 'player'
+                self.last_action = 'all_in'
                 return self._get_state()
 
     def _next_street(self):
@@ -477,6 +494,7 @@ class PokerGame:
         # Reset bets for new street
         self.player_bet = 0
         self.ai_bet = 0
+        self.last_action = None
 
         if self.street == 'preflop':
             # Deal flop
