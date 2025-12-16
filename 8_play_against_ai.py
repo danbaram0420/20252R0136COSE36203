@@ -30,19 +30,19 @@ def print_game_state(game, show_ai_cards=False):
     print_separator()
 
     # Player info
-    print(f"\n🧑 YOU:")
+    print(f"\n YOU:")
     print(f"  Hole: {game.player_hole[0]} {game.player_hole[1]}")
     print(f"  Stack: {game.player_stack} BB")
     print(f"  Bet: {game.player_bet} BB")
 
     # Board
     if game.board:
-        print(f"\n🃏 BOARD: {' '.join(str(c) for c in game.board)}")
+        print(f"\n BOARD: {' '.join(str(c) for c in game.board)}")
     else:
-        print(f"\n🃏 BOARD: (no cards yet)")
+        print(f"\n BOARD: (no cards yet)")
 
     # AI info
-    print(f"\n🤖 AI:")
+    print(f"\n AI:")
     if show_ai_cards and game.ai_hole:
         print(f"  Hole: {game.ai_hole[0]} {game.ai_hole[1]}")
     else:
@@ -51,7 +51,7 @@ def print_game_state(game, show_ai_cards=False):
     print(f"  Bet: {game.ai_bet} BB")
 
     # Pot
-    print(f"\n💰 POT: {game.pot} BB")
+    print(f"\n POT: {game.pot} BB")
     print_separator()
 
 
@@ -67,14 +67,14 @@ def get_player_action(game):
     """
     valid_actions = game.get_valid_actions()
 
-    print("\n🎯 Your turn!")
+    print("\n Your turn!")
     print(f"Valid actions: {', '.join(valid_actions)}")
 
     while True:
         action = input("\nChoose your action: ").strip().lower()
 
         if action not in valid_actions:
-            print(f"❌ Invalid action. Please choose from: {', '.join(valid_actions)}")
+            print(f" Invalid action. Please choose from: {', '.join(valid_actions)}")
             continue
 
         raise_amount = None
@@ -96,14 +96,14 @@ def get_player_action(game):
                         break
                     raise_amount = int(raise_input)
                     if raise_amount < min_raise:
-                        print(f"❌ Raise must be at least {min_raise} BB")
+                        print(f" Raise must be at least {min_raise} BB")
                         continue
                     if raise_amount + to_call > game.player_stack:
-                        print(f"❌ You only have {game.player_stack} BB")
+                        print(f" You only have {game.player_stack} BB")
                         continue
                     break
                 except ValueError:
-                    print("❌ Please enter a valid number")
+                    print(" Please enter a valid number")
                     continue
 
         return action, raise_amount
@@ -122,34 +122,34 @@ def print_hand_result(game, ai_dialogue=None):
     print_separator('=')
 
     # Show AI cards
-    print(f"\n🤖 AI reveals: {game.ai_hole[0]} {game.ai_hole[1]}")
+    print(f"\n AI reveals: {game.ai_hole[0]} {game.ai_hole[1]}")
 
     if game.folded:
         if game.folded == 'player':
-            print(f"\n❌ You folded. AI wins {game.pot} BB")
+            print(f"\n You folded. AI wins {game.pot} BB")
         else:
-            print(f"\n✅ AI folded. You win {game.pot} BB!")
+            print(f"\n AI folded. You win {game.pot} BB!")
     else:
         # Showdown
         if game.board:
-            print(f"\n🃏 Final Board: {' '.join(str(c) for c in game.board)}")
+            print(f"\n Final Board: {' '.join(str(c) for c in game.board)}")
 
         player_desc = game.get_hand_description('player')
         ai_desc = game.get_hand_description('ai')
 
-        print(f"\n🧑 Your hand: {player_desc}")
-        print(f"🤖 AI's hand: {ai_desc}")
+        print(f"\n Your hand: {player_desc}")
+        print(f" AI's hand: {ai_desc}")
 
         winner = game.get_winner()
         if winner == 'player':
-            print(f"\n✅ You win {game.pot} BB!")
+            print(f"\n You win {game.pot} BB!")
         elif winner == 'ai':
-            print(f"\n❌ AI wins {game.pot} BB")
+            print(f"\n AI wins {game.pot} BB")
         else:
-            print(f"\n🤝 Split pot! ({game.pot // 2} BB each)")
+            print(f"\n Split pot! ({game.pot // 2} BB each)")
 
     if ai_dialogue:
-        print(f"\n💬 AI says: \"{ai_dialogue}\"")
+        print(f"\n AI says: \"{ai_dialogue}\"")
 
     print_separator('=')
 
@@ -192,13 +192,13 @@ def play_game(agent, starting_stack=100, n_hands=None):
     while True:
         # Check if game should end
         if game.player_stack <= 0:
-            print("\n💥 You're out of chips! AI wins the match!")
+            print("\n You're out of chips! AI wins the match!")
             break
         if game.ai_stack <= 0:
-            print("\n🎉 AI is out of chips! You win the match!")
+            print("\n AI is out of chips! You win the match!")
             break
         if n_hands and hand_count >= n_hands:
-            print(f"\n⏰ {n_hands} hands completed!")
+            print(f"\n {n_hands} hands completed!")
             break
 
         # Start new hand
@@ -225,15 +225,14 @@ def play_game(agent, starting_stack=100, n_hands=None):
                 action, raise_amount = get_player_action(game)
 
                 if action == 'quit':
-                    print("\n👋 Thanks for playing!")
+                    print("\n Thanks for playing!")
                     return
 
                 game.act(action, raise_amount)
 
             else:
                 # AI's turn
-                print("\n🤖 AI is thinking...")
-                time.sleep(0.5)  # Dramatic pause
+                print("\n AI is thinking...")
 
                 state_for_ai = game._get_state()
                 state_for_ai['ai_hole'] = game.ai_hole  # Give AI access to its own cards
@@ -251,19 +250,19 @@ def play_game(agent, starting_stack=100, n_hands=None):
 
                 # Show AI action
                 if dialogue:
-                    print(f"💬 AI: \"{dialogue}\"")
+                    print(f" AI: \"{dialogue}\"")
 
                 to_call = abs(game.player_bet - game.ai_bet)
                 if action == 'fold':
-                    print(f"🤖 AI folds")
+                    print(f" AI folds")
                 elif action == 'check':
-                    print(f"🤖 AI checks")
+                    print(f" AI checks")
                 elif action == 'call':
-                    print(f"🤖 AI calls {to_call} BB")
+                    print(f" AI calls {to_call} BB")
                 elif action == 'raise':
-                    print(f"🤖 AI raises to {raise_amount} BB")
+                    print(f" AI raises to {raise_amount} BB")
                 elif action == 'all_in':
-                    print(f"🤖 AI goes all-in for {game.ai_stack} BB!")
+                    print(f" AI goes all-in for {game.ai_stack} BB!")
 
                 ai_last_dialogue = dialogue
                 game.act(action, raise_amount)
@@ -285,7 +284,7 @@ def play_game(agent, starting_stack=100, n_hands=None):
         if n_hands is None or hand_count < n_hands:
             response = input("\nPlay another hand? (y/n): ").strip().lower()
             if response != 'y':
-                print("\n👋 Thanks for playing!")
+                print("\n Thanks for playing!")
                 break
 
     # Final score
@@ -301,11 +300,11 @@ def play_game(agent, starting_stack=100, n_hands=None):
     print(f"  AI: {game.ai_stack} BB ({game.ai_stack - starting_stack:+d} BB)")
 
     if game.player_stack > game.ai_stack:
-        print(f"\n🎉 Congratulations! You won by {game.player_stack - game.ai_stack} BB!")
+        print(f"\n Congratulations! You won by {game.player_stack - game.ai_stack} BB!")
     elif game.ai_stack > game.player_stack:
-        print(f"\n😔 AI won by {game.ai_stack - game.player_stack} BB. Better luck next time!")
+        print(f"\n AI won by {game.ai_stack - game.player_stack} BB. Better luck next time!")
     else:
-        print(f"\n🤝 It's a tie!")
+        print(f"\n It's a tie!")
 
     print(f"{'='*60}")
 
@@ -358,7 +357,7 @@ def main():
             print(f"  ✗ {info['name']} - Not found")
 
     if not available_models:
-        print("\n❌ Error: No trained models found!")
+        print("\n Error: No trained models found!")
         print("\n   Please run steps 1-6 first to train models:")
         print("   1. python 1_preprocess_data.py")
         print("   2. python 2_train_baseline.py")
@@ -382,7 +381,7 @@ def main():
             selected_model = available_models[choice]
             break
         else:
-            print(f"❌ Invalid choice. Please select from: {', '.join(available_models.keys())}")
+            print(f" Invalid choice. Please select from: {', '.join(available_models.keys())}")
 
     # Set device
     device = 'cuda' if torch.cuda.is_available() else 'cpu'
@@ -399,7 +398,7 @@ def main():
         )
         print(f"✓ {selected_model['name']} loaded successfully!")
     except Exception as e:
-        print(f"\n❌ Error loading AI agent: {e}")
+        print(f"\n Error loading AI agent: {e}")
         import traceback
         traceback.print_exc()
         print("\nPlease ensure all required files are present.")
@@ -418,11 +417,11 @@ def main():
             else:
                 starting_stack = int(starting_stack)
             if starting_stack <= 0:
-                print("❌ Stack must be positive")
+                print(" Stack must be positive")
                 continue
             break
         except ValueError:
-            print("❌ Please enter a valid number")
+            print(" Please enter a valid number")
 
     while True:
         try:
@@ -432,19 +431,19 @@ def main():
             else:
                 n_hands = int(n_hands)
                 if n_hands <= 0:
-                    print("❌ Number of hands must be positive")
+                    print(" Number of hands must be positive")
                     continue
             break
         except ValueError:
-            print("❌ Please enter a valid number")
+            print(" Please enter a valid number")
 
     # Start game
     try:
         play_game(agent, starting_stack=starting_stack, n_hands=n_hands)
     except KeyboardInterrupt:
-        print("\n\n👋 Game interrupted. Thanks for playing!")
+        print("\n\n Game interrupted. Thanks for playing!")
     except Exception as e:
-        print(f"\n\n❌ Error during game: {e}")
+        print(f"\n\n Error during game: {e}")
         import traceback
         traceback.print_exc()
 
